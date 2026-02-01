@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button"
 import { useWallet } from "@/lib/wallet-context"
 
 const navLinks = [
-  { href: "#features", label: "Features" },
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#security", label: "Security" },
-  { href: "#about", label: "About" },
+  { href: "/verify", label: "Verify" },
+  { href: "/lookup", label: "Lookup" },
+  { href: "/dashboard", label: "Dashboard" },
 ]
 
 export function Header() {
@@ -76,17 +75,19 @@ export function Header() {
                 Connect Wallet
               </Button>
             )}
+            <Link href="/verify">
+              <Button variant="outline" className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent">
+                Verify
+              </Button>
+            </Link>
+            <Link href="/lookup">
+              <Button variant="outline" className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent">
+                Lookup
+              </Button>
+            </Link>
             <Link href="/dashboard">
-              <Button className="bg-[#fbbf24] text-[#0a0a0a] hover:bg-[#fbbf24]/90 font-semibold rounded-full px-6 gap-2 group">
+              <Button className="bg-[#fbbf24] text-[#0a0a0a] hover:bg-[#fbbf24]/90 font-semibold rounded-full px-6">
                 Dashboard
-                <svg
-                  className="w-4 h-4 transition-transform group-hover:translate-x-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
               </Button>
             </Link>
           </div>
@@ -139,12 +140,19 @@ export function Header() {
                   Connect Wallet
                 </Button>
               )}
+              <Link href="/verify" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent">
+                  Verify
+                </Button>
+              </Link>
+              <Link href="/lookup" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent">
+                  Lookup
+                </Button>
+              </Link>
               <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full bg-[#fbbf24] text-[#0a0a0a] hover:bg-[#fbbf24]/90 font-semibold rounded-full gap-2">
+                <Button className="w-full bg-[#fbbf24] text-[#0a0a0a] hover:bg-[#fbbf24]/90 font-semibold rounded-full">
                   Dashboard
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
                 </Button>
               </Link>
             </div>

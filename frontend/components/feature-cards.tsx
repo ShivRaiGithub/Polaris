@@ -15,14 +15,7 @@ const features = [
     title: "Zero-Knowledge",
     description:
       "Prove you meet requirements without revealing the underlying data. Age verification? Prove you're over 18 without sharing your birthdate.",
-  },
-  {
-    icon: Zap,
-    title: "Lightning Fast",
-    description:
-      "Generate proofs in milliseconds. Our optimized circuits ensure quick verification without compromising on security.",
-  },
-  
+  },  
   {
     icon: FileCheck,
     title: "Multi-Document",

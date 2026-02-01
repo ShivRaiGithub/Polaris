@@ -3,11 +3,12 @@
 import React from "react"
 import { useState } from "react"
 import Link from "next/link"
-import { Shield, Search, Loader2, CheckCircle, XCircle, ExternalLink, User, FileText } from "lucide-react"
+import { Shield, Search, Loader2, CheckCircle, XCircle, ExternalLink, User, FileText, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { StellarBackground } from "@/components/stellar-background"
+import { useWallet } from "@/lib/wallet-context"
 import { API_ENDPOINTS, DOCUMENT_TYPES } from "@/lib/constants"
 
 interface UserInfo {
@@ -44,6 +45,14 @@ export default function LookupPage() {
   const [isSearching, setIsSearching] = useState(false)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { 
+    walletConnected, 
+    walletAddress, 
+    isLoading: walletLoading, 
+    freighterInstalled,
+    connectWallet,
+    disconnectWallet 
+  } = useWallet()
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -113,6 +122,14 @@ export default function LookupPage() {
                   Verify
                 </Button>
               </Link>
+              <Link href="/lookup">
+                <Button
+                  variant="outline"
+                  className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent"
+                >
+                  Lookup
+                </Button>
+              </Link>
               <Link href="/dashboard">
                 <Button
                   variant="outline"
@@ -121,6 +138,30 @@ export default function LookupPage() {
                   Dashboard
                 </Button>
               </Link>
+              {walletConnected && walletAddress ? (
+                <Button
+                  onClick={disconnectWallet}
+                  variant="outline"
+                  className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
+                >
+                  <Wallet className="w-4 h-4 text-[#a78bfa]" />
+                  {walletAddress.substring(0, 4)}...{walletAddress.substring(walletAddress.length - 4)}
+                </Button>
+              ) : (
+                <Button
+                  onClick={connectWallet}
+                  disabled={walletLoading || !freighterInstalled}
+                  variant="outline"
+                  className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
+                >
+                  {walletLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wallet className="w-4 h-4" />
+                  )}
+                  Connect Wallet
+                </Button>
+              )}
             </div>
           </div>
         </nav>

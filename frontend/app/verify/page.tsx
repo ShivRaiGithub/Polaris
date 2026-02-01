@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { StellarBackground } from "@/components/stellar-background"
 import { useWallet } from "@/lib/wallet-context"
 import { signTransactionWithFreighter } from "@/lib/wallet"
-import { TEST_IDENTITY_DATA, DOCUMENT_TYPES, GENDER_OPTIONS, API_ENDPOINTS } from "@/lib/constants"
+import { DOCUMENT_TYPES, GENDER_OPTIONS, API_ENDPOINTS } from "@/lib/constants"
 
 interface VerificationResponse {
   success: boolean
@@ -253,7 +253,7 @@ export default function VerifyPage() {
         currentYear: today.getFullYear().toString(),
         currentMonth: (today.getMonth() + 1).toString(),
         currentDay: today.getDate().toString(),
-        genderFilter: 0, // No gender filter by default
+        genderFilter: parseInt(genderCode) || 0, // Set to extracted gender code (1=Male, 2=Female, 0=Other/No filter)
       }
 
       setExtractedData(identityData)
@@ -350,6 +350,11 @@ export default function VerifyPage() {
     try {
       // Send registration request to backend using extracted data
       setRegistrationStep("Generating ZK proof and submitting to blockchain...")
+      
+      console.log("🔍 Registration Debug - Extracted Data:", extractedData)
+      console.log("🔍 Gender:", extractedData.gender)
+      console.log("🔍 Gender Filter:", extractedData.genderFilter)
+      
       const response = await fetch(API_ENDPOINTS.REGISTER, {
         method: "POST",
         headers: {
@@ -405,9 +410,9 @@ export default function VerifyPage() {
             </Link>
 
             <div className="flex items-center gap-4">
-              <Link href="/dashboard">
+              <Link href="/verify">
                 <Button variant="outline" className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent">
-                  Dashboard
+                  Verify
                 </Button>
               </Link>
               <Link href="/lookup">
@@ -415,6 +420,35 @@ export default function VerifyPage() {
                   Lookup
                 </Button>
               </Link>
+              <Link href="/dashboard">
+                <Button variant="outline" className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent">
+                  Dashboard
+                </Button>
+              </Link>
+              {walletConnected && walletAddress ? (
+                <Button
+                  onClick={disconnectWallet}
+                  variant="outline"
+                  className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
+                >
+                  <Wallet className="w-4 h-4 text-[#a78bfa]" />
+                  {walletAddress.substring(0, 4)}...{walletAddress.substring(walletAddress.length - 4)}
+                </Button>
+              ) : (
+                <Button
+                  onClick={connectWallet}
+                  disabled={walletLoading || !freighterInstalled}
+                  variant="outline"
+                  className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
+                >
+                  {walletLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wallet className="w-4 h-4" />
+                  )}
+                  Connect Wallet
+                </Button>
+              )}
             </div>
           </div>
         </nav>

@@ -107,10 +107,20 @@ export default function DashboardPage() {
             </Link>
 
             <div className="flex items-center gap-4">
+              <Link href="/verify">
+                <Button variant="outline" className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent">
+                  Verify
+                </Button>
+              </Link>
               <Link href="/lookup">
                 <Button variant="outline" className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent">
                   <Search className="w-4 h-4" />
                   Lookup
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button variant="outline" className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full bg-transparent">
+                  Dashboard
                 </Button>
               </Link>
               {walletConnected && walletAddress ? (

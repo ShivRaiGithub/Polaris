@@ -291,7 +291,7 @@ app.post("/api/register", async (req, res) => {
                 ageOver21: (identityData.minAge || 18) >= 21,
                 documentType: getDocTypeName(identityData.docType),
                 documentTypeCode: identityData.docType,
-                genderVerified: parseInt(identityData.gender) !== 0, // Gender verified if not "Other" (1=Male, 2=Female)
+                genderVerified: parseInt(identityData.genderFilter || 0) !== 0, // Gender verified if genderFilter is set (1=Male only, 2=Female only)
             }
         });
 
@@ -608,10 +608,10 @@ app.get("/api/user/:address", async (req, res) => {
                                                 const docTypeCode = attrVal._value;
                                                 docAttributes.documentTypeCode = docTypeCode;
                                                 const docTypes = {
-                                                    1: "Passport",
+                                                    1: "Aadhaar Card",
                                                     2: "PAN Card",
                                                     3: "Driver's License",
-                                                    4: "Aadhaar Card",
+                                                    4: "Passport",
                                                     5: "Other ID"
                                                 };
                                                 docAttributes.documentType = docTypes[docTypeCode] || "Unknown";
@@ -675,10 +675,10 @@ app.get("/api/user/:address", async (req, res) => {
                                         attributes.documentTypeCode = docTypeCode;
                                         // Map document type code to name
                                         const docTypes = {
-                                            1: "Passport",
+                                            1: "Aadhaar Card",
                                             2: "PAN Card",
                                             3: "Driver's License",
-                                            4: "Aadhaar Card",
+                                            4: "Passport",
                                             5: "Other ID"
                                         };
                                         attributes.documentType = docTypes[docTypeCode] || "Unknown";
