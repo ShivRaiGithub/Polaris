@@ -38,7 +38,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-8 lg:mb-0">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Shield className="h-8 w-8 text-[#a78bfa]" />
-              <span className="text-xl font-bold text-[#fafafa]">ZK-Verify</span>
+              <span className="text-xl font-bold text-[#fafafa]">Polaris</span>
             </Link>
             <p className="text-[#a3a3a3] text-sm mb-6 max-w-xs">
               Privacy-preserving identity verification powered by zero-knowledge proofs.
@@ -128,7 +128,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-[#262626] flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-[#a3a3a3]">
-            © 2026 ZK-Verify. All rights reserved.
+            © 2026 Polaris. All rights reserved.
           </p>
           <p className="text-sm text-[#a3a3a3]">
             Built with privacy in mind.

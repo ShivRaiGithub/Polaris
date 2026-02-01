@@ -9,7 +9,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'ZK-Verify | Privacy-Preserving Identity Verification',
+  title: 'Polaris | Privacy-Preserving Identity Verification',
   description: 'The next-generation identity verification platform using Zero-Knowledge Proofs. Verify your identity without revealing sensitive information.',
   generator: 'v0.app',
   icons: {

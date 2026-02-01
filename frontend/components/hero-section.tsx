@@ -12,7 +12,7 @@ export function HeroSection() {
           {/* Left Column - Bold Typography */}
           <div className="space-y-6">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-[#fafafa] leading-[0.9]">
-              <span className="block">ZK-ID</span>
+              <span className="block">Polaris</span>
               <span className="block">VERIFY</span>
             </h1>
             <div className="w-24 h-1 bg-gradient-to-r from-[#a78bfa] to-[#fbbf24]" />

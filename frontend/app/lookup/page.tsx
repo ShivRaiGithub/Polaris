@@ -101,7 +101,7 @@ export default function LookupPage() {
                 <Shield className="h-8 w-8 text-[#a78bfa] transition-transform group-hover:scale-110" />
                 <div className="absolute inset-0 blur-md bg-[#a78bfa]/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <span className="text-xl font-bold text-[#fafafa]">ZK-Verify</span>
+              <span className="text-xl font-bold text-[#fafafa]">Polaris</span>
             </Link>
 
             <div className="flex items-center gap-4">
@@ -405,7 +405,7 @@ export default function LookupPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-[#a3a3a3]">
                 <p>
-                  This lookup tool allows you to verify the identity status of any Stellar address on the ZK-Verify
+                  This lookup tool allows you to verify the identity status of any Stellar address on the Polaris
                   network.
                 </p>
                 <p>

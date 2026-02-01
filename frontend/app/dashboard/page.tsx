@@ -103,7 +103,7 @@ export default function DashboardPage() {
               <div className="relative">
                 <Shield className="h-8 w-8 text-[#a78bfa] transition-transform group-hover:scale-110" />
               </div>
-              <span className="text-xl font-bold text-[#fafafa]">ZKVerify</span>
+              <span className="text-xl font-bold text-[#fafafa]">Polaris</span>
             </Link>
 
             <div className="flex items-center gap-4">
