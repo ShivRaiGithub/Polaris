@@ -17,7 +17,7 @@ app.use(express.static('public')); // Serve frontend
 // --- CONFIGURATION ---
 const RPC_URL = process.env.RPC_URL || "https://soroban-testnet.stellar.org:443";
 const NETWORK_PASSPHRASE = Networks.TESTNET;
-const CONTRACT_ID = process.env.CONTRACT_ID || "CA663VKXGRMCBQAKN26VNJPX5ZW7K73WDCVJQQLQCFXA7UKB2JXTNGH2";
+const CONTRACT_ID = process.env.CONTRACT_ID || "CDWMZOQNG2SRMKGLNZH7PRZIYFO25NG4MQOF3RPAHH5WUD5WQXSQ25YO";
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const PORT = process.env.PORT || 3001;
 
@@ -79,21 +79,15 @@ async function generateProof(identityData, userAddress) {
     return { proof, publicSignals, verified };
 }
 
-// UPDATE THIS FUNCTION in your server.js
-
-async function submitToSoroban(userAddress, userSecret, commitmentHashHex, nullifierHex, identityData) {
+// Submit to Soroban (admin signs and submits)
+async function submitToSoroban(userAddress, commitmentHashHex, nullifierHex, identityData) {
     const adminKey = Keypair.fromSecret(ADMIN_SECRET);
-    const userKey = userSecret ? Keypair.fromSecret(userSecret) : null;
     
-    // Verify user address matches if secret provided
-    if (userKey && userKey.publicKey() !== userAddress) {
-        throw new Error("User secret doesn't match provided address");
-    }
-
     const nativeAsset = Asset.native();
     const TOKEN_ADDRESS = nativeAsset.contractId(NETWORK_PASSPHRASE);
     const tokenContract = new Contract(TOKEN_ADDRESS);
 
+    // Use admin account as source (admin pays fees)
     const adminAccount = await server.getAccount(adminKey.publicKey());
     
     // Extract verification attributes from identityData
@@ -107,36 +101,30 @@ async function submitToSoroban(userAddress, userSecret, commitmentHashHex, nulli
                 contract: CONTRACT_ID,
                 function: "register_verified_identity",
                 args: [
-                    new Address(adminKey.publicKey()).toScVal(),
-                    new Address(userAddress).toScVal(),
+                    new Address(adminKey.publicKey()).toScVal(),  // Admin authorizes
+                    new Address(userAddress).toScVal(),           // User being registered
                     xdr.ScVal.scvBytes(Buffer.from(commitmentHashHex, "hex")),
                     xdr.ScVal.scvBytes(Buffer.from(nullifierHex, "hex")),
-                    tokenContract.address().toScVal(),
-                    // NEW PARAMETERS:
-                    xdr.ScVal.scvU32(minAgeVerified),      // min_age_verified
-                    xdr.ScVal.scvU32(documentType),        // document_type
-                    xdr.ScVal.scvBool(genderVerified),     // gender_verified
+                    xdr.ScVal.scvU32(minAgeVerified),
+                    xdr.ScVal.scvU32(documentType),
+                    xdr.ScVal.scvBool(genderVerified),
                 ],
             })
         )
-        .setTimeout(30)
+        .setTimeout(300)
         .build();
 
-    // Simulate first
+    // Simulate transaction
     const simResult = await server.simulateTransaction(tx);
     if (simResult.error) {
         throw new Error(`Simulation failed: ${simResult.error}`);
     }
 
-    // Prepare and sign
+    // Prepare and sign with admin
     const preparedTx = await server.prepareTransaction(tx);
     preparedTx.sign(adminKey);
     
-    // Sign with user key if different from admin and provided
-    if (userKey && adminKey.publicKey() !== userKey.publicKey()) {
-        preparedTx.sign(userKey);
-    }
-
+    // Submit transaction
     const sentTx = await server.sendTransaction(preparedTx);
     
     if (sentTx.errorResult) {
@@ -174,7 +162,6 @@ async function submitToSoroban(userAddress, userSecret, commitmentHashHex, nulli
  * Body:
  * {
  *   "userAddress": "GXXX...",
- *   "userSecret": "SXXX..." (optional, required for 2nd+ documents),
  *   "identityData": {
  *     "name": "JOHN DOE",
  *     "dob": { "year": 1995, "month": 5, "day": 15 },
@@ -189,13 +176,15 @@ async function submitToSoroban(userAddress, userSecret, commitmentHashHex, nulli
  *     "genderFilter": 0
  *   }
  * }
+ * 
+ * Note: userSecret is NO LONGER required - user will sign via Freighter wallet on frontend if needed
  */
 // UPDATE THE /api/register ENDPOINT in server.js
 // Replace the existing endpoint with this:
 
 app.post("/api/register", async (req, res) => {
     try {
-        const { userAddress, userSecret, identityData } = req.body;
+        const { userAddress, identityData } = req.body;
 
         if (!userAddress || !identityData) {
             return res.status(400).json({ error: "Missing userAddress or identityData" });
@@ -224,16 +213,9 @@ app.post("/api/register", async (req, res) => {
         
         console.log(`[REGISTER] Current doc count: ${currentDocCount}`);
 
-        // If user has 1+ docs, they need to provide their secret for payment auth
-        if (currentDocCount >= 1 && !userSecret) {
-            return res.status(400).json({ 
-                error: "User secret required for 2nd+ documents (30 XLM payment)",
-                requiresPayment: true,
-                paymentAmount: "30 XLM",
-                currentDocCount
-            });
-        }
-
+        // Note: For 2nd+ documents requiring payment, the frontend should handle payment
+        // via Freighter wallet before calling this endpoint
+        
         // Generate ZK proof
         console.log(`[REGISTER] Generating ZK proof...`);
         const { proof, publicSignals, verified } = await generateProof(identityData, userAddress);
@@ -248,9 +230,39 @@ app.post("/api/register", async (req, res) => {
         const commitmentHashHex = BigInt(publicSignals[0]).toString(16).padStart(64, '0');
         const nullifierHex = BigInt(publicSignals[2]).toString(16).padStart(64, '0');
 
-        // Submit to Soroban (NOW WITH ATTRIBUTES)
-        console.log(`[REGISTER] Submitting to Soroban with attributes...`);
-        const result = await submitToSoroban(userAddress, userSecret, commitmentHashHex, nullifierHex, identityData);
+        // Check if user needs prepaid credits
+        if (currentDocCount >= 1) {
+            // Check if user has prepaid credits
+            const creditsCheckTx = new TransactionBuilder(adminAccount, { 
+                fee: "100", 
+                networkPassphrase: NETWORK_PASSPHRASE 
+            })
+                .addOperation(
+                    Operation.invokeContractFunction({
+                        contract: CONTRACT_ID,
+                        function: "get_prepaid_credits",
+                        args: [new Address(userAddress).toScVal()]
+                    })
+                )
+                .setTimeout(180)
+                .build();
+
+            const creditsResult = await server.simulateTransaction(creditsCheckTx);
+            const credits = creditsResult.result?.retval?._value ?? 0;
+
+            if (credits === 0) {
+                return res.status(402).json({ 
+                    error: "Payment required",
+                    message: "You need to prepay for additional verifications. Please call /api/prepay first.",
+                    requiresPayment: true,
+                    docCount: currentDocCount
+                });
+            }
+        }
+
+        // Submit to Soroban (admin signs and submits)
+        console.log(`[REGISTER] Submitting to Soroban...`);
+        const result = await submitToSoroban(userAddress, commitmentHashHex, nullifierHex, identityData);
 
         console.log(`[REGISTER] Success! Txn Hash: ${result.hash}`);
 
@@ -266,7 +278,7 @@ app.post("/api/register", async (req, res) => {
             return types[code] || "Unknown";
         };
 
-        // Return response with verification details
+        // Return success response
         res.json({
             success: true,
             txnHash: result.hash,
@@ -274,8 +286,6 @@ app.post("/api/register", async (req, res) => {
             nullifier: nullifierHex,
             publicSignals,
             docCount: currentDocCount + 1,
-            paymentRequired: currentDocCount >= 1,
-            // NEW: What was verified
             verifiedAttributes: {
                 ageOver18: (identityData.minAge || 18) >= 18,
                 ageOver21: (identityData.minAge || 18) >= 21,
@@ -287,6 +297,141 @@ app.post("/api/register", async (req, res) => {
 
     } catch (error) {
         console.error(`[REGISTER] Error:`, error);
+        res.status(500).json({ 
+            error: error.message,
+            details: error.stack 
+        });
+    }
+});
+
+/**
+ * POST /api/register/build-prepay
+ * Build unsigned prepayment transaction for user to sign
+ * 
+ * Body:
+ * {
+ *   "userAddress": "GXXX..."
+ * }
+ */
+app.post("/api/register/build-prepay", async (req, res) => {
+    try {
+        const { userAddress } = req.body;
+
+        if (!userAddress) {
+            return res.status(400).json({ error: "Missing userAddress" });
+        }
+
+        console.log(`[BUILD-PREPAY] Building prepayment transaction for ${userAddress}`);
+
+        const adminKey = Keypair.fromSecret(ADMIN_SECRET);
+        const nativeAsset = Asset.native();
+        const TOKEN_ADDRESS = nativeAsset.contractId(NETWORK_PASSPHRASE);
+        const tokenContract = new Contract(TOKEN_ADDRESS);
+
+        // Get user account
+        const userAccount = await server.getAccount(userAddress);
+
+        // Build prepay transaction
+        const tx = new TransactionBuilder(userAccount, { 
+            fee: "200000", 
+            networkPassphrase: NETWORK_PASSPHRASE 
+        })
+            .addOperation(
+                Operation.invokeContractFunction({
+                    contract: CONTRACT_ID,
+                    function: "prepay_verification",
+                    args: [
+                        new Address(userAddress).toScVal(),
+                        tokenContract.address().toScVal(),
+                    ]
+                })
+            )
+            .setTimeout(300)
+            .build();
+
+        // Simulate transaction
+        const simResult = await server.simulateTransaction(tx);
+        if (simResult.error) {
+            throw new Error(`Simulation failed: ${simResult.error}`);
+        }
+
+        // Prepare transaction and return unsigned XDR
+        const preparedTx = await server.prepareTransaction(tx);
+        const unsignedXdr = preparedTx.toXDR();
+
+        console.log(`[BUILD-PREPAY] Returning unsigned prepayment transaction`);
+
+        res.json({
+            success: true,
+            unsignedXdr,
+        });
+
+    } catch (error) {
+        console.error(`[BUILD-PREPAY] Error:`, error);
+        res.status(500).json({ 
+            error: error.message,
+            details: error.stack 
+        });
+    }
+});
+
+/**
+ * POST /api/register/prepay
+ * Prepay for future verification (2nd+ documents)
+ * 
+ * Body:
+ * {
+ *   "userAddress": "GXXX...",
+ *   "signedXdr": "AAAAAgA..." // User-signed prepayment transaction
+ * }
+ */
+app.post("/api/register/prepay", async (req, res) => {
+    try {
+        const { userAddress, signedXdr } = req.body;
+
+        if (!signedXdr || !userAddress) {
+            return res.status(400).json({ error: "Missing signedXdr or userAddress" });
+        }
+
+        console.log(`[PREPAY] Submitting prepayment for ${userAddress}`);
+
+        // Parse and submit the signed prepayment transaction
+        const tx = TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE);
+        const sentTx = await server.sendTransaction(tx);
+        
+        if (sentTx.errorResult) {
+            throw new Error(`Transaction rejected: ${JSON.stringify(sentTx.errorResult)}`);
+        }
+
+        // Poll for result
+        let status = await server.getTransaction(sentTx.hash);
+        let attempts = 0;
+        const maxAttempts = 30;
+        
+        while (status.status === "NOT_FOUND" || status.status === "PENDING") {
+            await new Promise(r => setTimeout(r, 2000));
+            status = await server.getTransaction(sentTx.hash);
+            attempts++;
+            
+            if (attempts >= maxAttempts) {
+                throw new Error("Transaction timeout");
+            }
+        }
+        
+        if (status.status !== "SUCCESS") {
+            throw new Error(`Transaction failed with status: ${status.status}`);
+        }
+
+        console.log(`[PREPAY] Success! Txn Hash: ${sentTx.hash}`);
+
+        res.json({
+            success: true,
+            txnHash: sentTx.hash,
+            message: "Prepayment successful. You can now register additional documents."
+        });
+
+    } catch (error) {
+        console.error(`[PREPAY] Error:`, error);
         res.status(500).json({ 
             error: error.message,
             details: error.stack 
@@ -376,6 +521,23 @@ app.get("/api/user/:address", async (req, res) => {
 
         const countResult = await server.simulateTransaction(countCheckTx);
 
+        // Get prepaid credits
+        const creditsCheckTx = new TransactionBuilder(adminAccount, { 
+            fee: "100", 
+            networkPassphrase: NETWORK_PASSPHRASE 
+        })
+            .addOperation(
+                Operation.invokeContractFunction({
+                    contract: CONTRACT_ID,
+                    function: "get_prepaid_credits",
+                    args: [new Address(address).toScVal()]
+                })
+            )
+            .setTimeout(180)
+            .build();
+
+        const creditsResult = await server.simulateTransaction(creditsCheckTx);
+
         if (identityResult.error) {
             return res.status(404).json({ 
                 error: "User not verified or identity not found",
@@ -385,7 +547,97 @@ app.get("/api/user/:address", async (req, res) => {
         }
 
         const docCount = countResult.result?.retval?._value ?? 0;
+        const prepaidCredits = creditsResult.result?.retval?._value ?? 0;
         const identityRecord = identityResult.result?.retval;
+
+        // Fetch all document records
+        const allDocuments = [];
+        for (let i = 0; i < docCount; i++) {
+            try {
+                const docCheckTx = new TransactionBuilder(adminAccount, { 
+                    fee: "100", 
+                    networkPassphrase: NETWORK_PASSPHRASE 
+                })
+                    .addOperation(
+                        Operation.invokeContractFunction({
+                            contract: CONTRACT_ID,
+                            function: "get_document",
+                            args: [
+                                new Address(address).toScVal(),
+                                xdr.ScVal.scvU32(i)
+                            ]
+                        })
+                    )
+                    .setTimeout(180)
+                    .build();
+
+                const docResult = await server.simulateTransaction(docCheckTx);
+                
+                if (!docResult.error && docResult.result?.retval) {
+                    // Parse this document's attributes
+                    const docRecord = docResult.result.retval;
+                    let docCommitmentHash = null;
+                    let docTimestamp = null;
+                    let docAttributes = null;
+
+                    if (docRecord && docRecord._value) {
+                        const recordMap = docRecord._value;
+                        
+                        if (Array.isArray(recordMap)) {
+                            for (const entry of recordMap) {
+                                const key = entry._attributes?.key?._value?.toString();
+                                const val = entry._attributes?.val;
+                                
+                                if (key === 'commitment_hash') {
+                                    docCommitmentHash = val._value?.toString('hex');
+                                } else if (key === 'timestamp') {
+                                    docTimestamp = val._value?.toString();
+                                } else if (key === 'attributes_verified') {
+                                    const attrMap = val._value;
+                                    if (Array.isArray(attrMap)) {
+                                        docAttributes = {};
+                                        for (const attrEntry of attrMap) {
+                                            const attrKey = attrEntry._attributes?.key?._value?.toString();
+                                            const attrVal = attrEntry._attributes?.val;
+                                            
+                                            if (attrKey === 'age_over_18') {
+                                                docAttributes.ageOver18 = attrVal._value === true;
+                                            } else if (attrKey === 'age_over_21') {
+                                                docAttributes.ageOver21 = attrVal._value === true;
+                                            } else if (attrKey === 'document_type') {
+                                                const docTypeCode = attrVal._value;
+                                                docAttributes.documentTypeCode = docTypeCode;
+                                                const docTypes = {
+                                                    1: "Passport",
+                                                    2: "PAN Card",
+                                                    3: "Driver's License",
+                                                    4: "Aadhaar Card",
+                                                    5: "Other ID"
+                                                };
+                                                docAttributes.documentType = docTypes[docTypeCode] || "Unknown";
+                                            } else if (attrKey === 'gender_verified') {
+                                                docAttributes.genderVerified = attrVal._value === true;
+                                            } else if (attrKey === 'verification_date') {
+                                                docAttributes.verificationDate = attrVal._value?.toString();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    allDocuments.push({
+                        index: i,
+                        commitmentHash: docCommitmentHash,
+                        timestamp: docTimestamp,
+                        attributes: docAttributes
+                    });
+                }
+            } catch (e) {
+                console.error(`[USER] Error fetching document ${i}:`, e);
+            }
+        }
 
         // Parse the identity record (IdentityRecord struct)
         let commitmentHash = null;
@@ -449,9 +701,11 @@ app.get("/api/user/:address", async (req, res) => {
             address,
             verified: true,
             docCount,
+            prepaidCredits,
             commitmentHash,
             timestamp,
-            attributes,  // NEW: Verification attributes
+            attributes,  // Latest verification attributes
+            documents: allDocuments,  // All documents
             rawIdentityRecord: identityRecord
         });
 

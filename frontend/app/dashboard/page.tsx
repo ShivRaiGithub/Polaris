@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Shield, ArrowRight, CheckCircle, Clock, XCircle, Wallet, Plus } from "lucide-react"
+import { Shield, ArrowRight, CheckCircle, Clock, XCircle, Wallet, Plus, Loader2, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { StellarBackground } from "@/components/stellar-background"
+import { useWallet } from "@/lib/wallet-context"
+import { API_ENDPOINTS } from "@/lib/constants"
 
 interface VerificationRecord {
   id: string
@@ -59,24 +61,34 @@ const statusConfig = {
 }
 
 export default function DashboardPage() {
-  const [walletConnected, setWalletConnected] = useState(false)
-  const [walletAddress, setWalletAddress] = useState("")
+  const { 
+    walletConnected, 
+    walletAddress, 
+    isLoading: walletLoading, 
+    freighterInstalled,
+    connectWallet,
+    disconnectWallet 
+  } = useWallet()
+  const [userInfo, setUserInfo] = useState<any>(null)
 
-  const connectWallet = async () => {
-    // Placeholder for wallet connection
-    // Your friend can implement the actual wallet connection logic here
-    try {
-      // Mock wallet connection
-      setWalletConnected(true)
-      setWalletAddress("0x1234...5678")
-    } catch (error) {
-      console.log("[v0] Wallet connection error:", error)
+  useEffect(() => {
+    if (walletConnected && walletAddress) {
+      fetchUserInfo()
     }
-  }
+  }, [walletConnected, walletAddress])
 
-  const disconnectWallet = () => {
-    setWalletConnected(false)
-    setWalletAddress("")
+  const fetchUserInfo = async () => {
+    if (!walletAddress) return
+
+    try {
+      const response = await fetch(`${API_ENDPOINTS.USER}/${walletAddress}`)
+      if (response.ok) {
+        const data = await response.json()
+        setUserInfo(data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch user info:", error)
+    }
   }
 
   return (
@@ -90,158 +102,263 @@ export default function DashboardPage() {
             <Link href="/" className="flex items-center gap-2 group">
               <div className="relative">
                 <Shield className="h-8 w-8 text-[#a78bfa] transition-transform group-hover:scale-110" />
-                <div className="absolute inset-0 blur-md bg-[#a78bfa]/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <span className="text-xl font-bold text-[#fafafa]">ZK-Verify</span>
+              <span className="text-xl font-bold text-[#fafafa]">ZKVerify</span>
             </Link>
 
             <div className="flex items-center gap-4">
-              {walletConnected ? (
+              <Link href="/lookup">
+                <Button variant="outline" className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent">
+                  <Search className="w-4 h-4" />
+                  Lookup
+                </Button>
+              </Link>
+              {walletConnected && walletAddress ? (
                 <Button
                   onClick={disconnectWallet}
                   variant="outline"
                   className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
                 >
                   <Wallet className="w-4 h-4 text-[#a78bfa]" />
-                  {walletAddress}
+                  {walletAddress.substring(0, 4)}...{walletAddress.substring(walletAddress.length - 4)}
                 </Button>
               ) : (
                 <Button
                   onClick={connectWallet}
+                  disabled={walletLoading || !freighterInstalled}
                   variant="outline"
                   className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
                 >
-                  <Wallet className="w-4 h-4" />
+                  {walletLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wallet className="w-4 h-4" />
+                  )}
                   Connect Wallet
                 </Button>
               )}
-              <Link href="/verify">
-                <Button className="bg-[#fbbf24] text-[#0a0a0a] hover:bg-[#fbbf24]/90 font-semibold rounded-full gap-2">
-                  <Plus className="w-4 h-4" />
-                  New Verification
-                </Button>
-              </Link>
             </div>
           </div>
         </nav>
       </header>
 
-      <main className="relative z-10 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+      {/* Main Content */}
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+        <div className="max-w-6xl mx-auto">
+          {/* Page Header */}
           <div className="mb-12">
-            <h1 className="text-4xl sm:text-5xl font-black text-[#fafafa] mb-4">
-              Dashboard
-            </h1>
+            <h1 className="text-4xl font-bold text-[#fafafa] mb-4">Dashboard</h1>
             <p className="text-[#a3a3a3] text-lg">
               Manage your identity verifications and ZK proofs
             </p>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-            <Card className="bg-[#111111] border-[#262626]">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[#a3a3a3] text-sm">Total Verifications</p>
-                    <p className="text-3xl font-bold text-[#fafafa] mt-1">12</p>
+          {/* Stats Cards - Dynamic based on wallet connection */}
+          {walletConnected && userInfo && (
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-12">
+              <Card className="bg-[#111111] border-[#262626]">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[#a3a3a3] text-sm">Verification Status</p>
+                      <p className="text-3xl font-bold text-[#fafafa] mt-1">
+                        {userInfo.verified ? "Verified" : "Not Verified"}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-[#a78bfa]/10 rounded-xl">
+                      <Shield className="w-6 h-6 text-[#a78bfa]" />
+                    </div>
                   </div>
-                  <div className="p-3 bg-[#a78bfa]/10 rounded-xl">
-                    <Shield className="w-6 h-6 text-[#a78bfa]" />
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#111111] border-[#262626]">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[#a3a3a3] text-sm">Documents Registered</p>
+                      <p className="text-3xl font-bold text-[#fafafa] mt-1">{userInfo.docCount || 0}</p>
+                    </div>
+                    <div className="p-3 bg-green-400/10 rounded-xl">
+                      <CheckCircle className="w-6 h-6 text-green-400" />
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#111111] border-[#262626]">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[#a3a3a3] text-sm">Prepaid Credits</p>
+                      <p className="text-3xl font-bold text-[#fbbf24] mt-1">{userInfo.prepaidCredits || 0}</p>
+                    </div>
+                    <div className="p-3 bg-yellow-400/10 rounded-xl">
+                      <Wallet className="w-6 h-6 text-yellow-400" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#111111] border-[#262626]">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[#a3a3a3] text-sm">Age 18+ Verified</p>
+                      <p className="text-3xl font-bold text-[#fafafa] mt-1">
+                        {userInfo.attributes?.ageOver18 ? "Yes" : "No"}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-green-400/10 rounded-xl">
+                      <CheckCircle className="w-6 h-6 text-green-400" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Wallet Connection Prompt */}
+          {!walletConnected && (
+            <Card className="bg-[#111111] border-[#262626] mb-12">
+              <CardContent className="pt-8 pb-8">
+                <div className="text-center">
+                  <Wallet className="w-12 h-12 mx-auto mb-4 text-[#a3a3a3]" />
+                  <p className="text-[#fafafa] font-medium mb-2">Connect Your Wallet</p>
+                  <p className="text-[#a3a3a3] text-sm mb-4">
+                    Connect your Freighter wallet to view your verification status
+                  </p>
+                  <Button
+                    onClick={connectWallet}
+                    disabled={walletLoading || !freighterInstalled}
+                    className="bg-[#a78bfa] text-[#0a0a0a] hover:bg-[#a78bfa]/90"
+                  >
+                    {walletLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-4 h-4 mr-2" />
+                        Connect Freighter
+                      </>
+                    )}
+                  </Button>
+                  {!freighterInstalled && (
+                    <p className="text-yellow-400 text-sm mt-3">
+                      Freighter wallet not installed.{" "}
+                      <a
+                        href="https://www.freighter.app/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
+                        Install it here
+                      </a>
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
+          )}
 
-            <Card className="bg-[#111111] border-[#262626]">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[#a3a3a3] text-sm">Active Proofs</p>
-                    <p className="text-3xl font-bold text-[#fafafa] mt-1">8</p>
+          {/* Verified Attributes */}
+          {walletConnected && userInfo && userInfo.verified && (
+            <Card className="bg-[#111111] border-[#262626] mb-8">
+              <CardHeader>
+                <CardTitle className="text-[#fafafa]">Your Verified Attributes</CardTitle>
+                <CardDescription className="text-[#a3a3a3]">
+                  Identity attributes verified on the blockchain
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userInfo.attributes && (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {userInfo.attributes.ageOver18 !== undefined && (
+                      <div className="p-4 bg-[#1a1a1a] rounded-xl">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[#a3a3a3]">Age 18+</span>
+                          <span className={userInfo.attributes.ageOver18 ? "text-green-400" : "text-red-400"}>
+                            {userInfo.attributes.ageOver18 ? "✓ Verified" : "✗ Not verified"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {userInfo.attributes.ageOver21 !== undefined && (
+                      <div className="p-4 bg-[#1a1a1a] rounded-xl">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[#a3a3a3]">Age 21+</span>
+                          <span className={userInfo.attributes.ageOver21 ? "text-green-400" : "text-red-400"}>
+                            {userInfo.attributes.ageOver21 ? "✓ Verified" : "✗ Not verified"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {userInfo.attributes.documentType && (
+                      <div className="p-4 bg-[#1a1a1a] rounded-xl">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[#a3a3a3]">Document Type</span>
+                          <span className="text-[#fafafa] font-medium">{userInfo.attributes.documentType}</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {userInfo.attributes.genderVerified !== undefined && (
+                      <div className="p-4 bg-[#1a1a1a] rounded-xl">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[#a3a3a3]">Gender Verified</span>
+                          <span className={userInfo.attributes.genderVerified ? "text-green-400" : "text-[#a3a3a3]"}>
+                            {userInfo.attributes.genderVerified ? "✓ Yes" : "No"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="p-3 bg-green-400/10 rounded-xl">
-                    <CheckCircle className="w-6 h-6 text-green-400" />
+                )}
+                
+                {userInfo.commitmentHash && (
+                  <div className="mt-4 p-4 bg-[#1a1a1a] rounded-xl">
+                    <p className="text-[#a3a3a3] text-sm mb-1">Commitment Hash</p>
+                    <p className="text-[#fafafa] font-mono text-xs break-all">{userInfo.commitmentHash}</p>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
+          )}
 
-            <Card className="bg-[#111111] border-[#262626]">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[#a3a3a3] text-sm">Pending</p>
-                    <p className="text-3xl font-bold text-[#fafafa] mt-1">2</p>
-                  </div>
-                  <div className="p-3 bg-yellow-400/10 rounded-xl">
-                    <Clock className="w-6 h-6 text-yellow-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Verification History */}
+          {/* Getting Started / Quick Actions */}
           <Card className="bg-[#111111] border-[#262626]">
             <CardHeader>
-              <CardTitle className="text-[#fafafa]">Verification History</CardTitle>
+              <CardTitle className="text-[#fafafa]">Getting Started</CardTitle>
               <CardDescription className="text-[#a3a3a3]">
-                Your recent identity verification attempts
+                Quick actions to manage your identity
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {mockRecords.map((record) => {
-                  const status = statusConfig[record.status]
-                  const StatusIcon = status.icon
-
-                  return (
-                    <div
-                      key={record.id}
-                      className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-lg ${status.bg}`}>
-                          <StatusIcon className={`w-5 h-5 ${status.color}`} />
-                        </div>
-                        <div>
-                          <p className="text-[#fafafa] font-medium">{record.documentType}</p>
-                          <p className="text-[#a3a3a3] text-sm">{record.timestamp}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <span className={`px-3 py-1 rounded-full text-sm ${status.bg} ${status.color}`}>
-                          {status.label}
-                        </span>
-                        {record.status === "verified" && record.proofId && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-[#a78bfa] hover:text-[#a78bfa] hover:bg-[#a78bfa]/10"
-                          >
-                            View Proof
-                            <ArrowRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Link href="/verify" className="block">
+                  <div className="p-6 bg-[#1a1a1a] rounded-xl hover:bg-[#262626] transition-colors cursor-pointer group">
+                    <Shield className="w-8 h-8 text-[#a78bfa] mb-3 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-[#fafafa] font-medium mb-2">Register Identity</h3>
+                    <p className="text-[#a3a3a3] text-sm">
+                      Verify your identity using zero-knowledge proofs
+                    </p>
+                  </div>
+                </Link>
+                
+                <Link href="/lookup" className="block">
+                  <div className="p-6 bg-[#1a1a1a] rounded-xl hover:bg-[#262626] transition-colors cursor-pointer group">
+                    <Search className="w-8 h-8 text-[#fbbf24] mb-3 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-[#fafafa] font-medium mb-2">Lookup Users</h3>
+                    <p className="text-[#a3a3a3] text-sm">
+                      Verify other users' identities on the blockchain
+                    </p>
+                  </div>
+                </Link>
               </div>
-
-              {mockRecords.length === 0 && (
-                <div className="text-center py-12">
-                  <Shield className="w-12 h-12 mx-auto mb-4 text-[#a3a3a3]" />
-                  <p className="text-[#a3a3a3]">No verifications yet</p>
-                  <Link href="/verify">
-                    <Button className="mt-4 bg-[#fbbf24] text-[#0a0a0a] hover:bg-[#fbbf24]/90">
-                      Start Your First Verification
-                    </Button>
-                  </Link>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

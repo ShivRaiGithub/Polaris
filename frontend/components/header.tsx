@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, X, Shield, Wallet } from "lucide-react"
+import { Menu, X, Shield, Wallet, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useWallet } from "@/lib/wallet-context"
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -14,24 +15,14 @@ const navLinks = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [walletConnected, setWalletConnected] = useState(false)
-  const [walletAddress, setWalletAddress] = useState("")
-
-  const connectWallet = async () => {
-    // Placeholder for wallet connection logic
-    try {
-      // Mock wallet connection - replace with actual wallet integration
-      setWalletConnected(true)
-      setWalletAddress("0x1234...5678")
-    } catch (error) {
-      console.log("[v0] Wallet connection error:", error)
-    }
-  }
-
-  const disconnectWallet = () => {
-    setWalletConnected(false)
-    setWalletAddress("")
-  }
+  const { 
+    walletConnected, 
+    walletAddress, 
+    isLoading: walletLoading, 
+    freighterInstalled,
+    connectWallet,
+    disconnectWallet 
+  } = useWallet()
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-[#262626]">
@@ -61,22 +52,27 @@ export function Header() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex md:items-center md:gap-3">
-            {walletConnected ? (
+            {walletConnected && walletAddress ? (
               <Button
                 onClick={disconnectWallet}
                 variant="outline"
                 className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
               >
                 <Wallet className="w-4 h-4 text-[#a78bfa]" />
-                {walletAddress}
+                {walletAddress.substring(0, 4)}...{walletAddress.substring(walletAddress.length - 4)}
               </Button>
             ) : (
               <Button
                 onClick={connectWallet}
+                disabled={walletLoading || !freighterInstalled}
                 variant="outline"
                 className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
               >
-                <Wallet className="w-4 h-4" />
+                {walletLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Wallet className="w-4 h-4" />
+                )}
                 Connect Wallet
               </Button>
             )}
@@ -119,22 +115,27 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
-              {walletConnected ? (
+              {walletConnected && walletAddress ? (
                 <Button
                   onClick={disconnectWallet}
                   variant="outline"
                   className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
                 >
                   <Wallet className="w-4 h-4 text-[#a78bfa]" />
-                  {walletAddress}
+                  {walletAddress.substring(0, 4)}...{walletAddress.substring(walletAddress.length - 4)}
                 </Button>
               ) : (
                 <Button
                   onClick={connectWallet}
+                  disabled={walletLoading || !freighterInstalled}
                   variant="outline"
                   className="border-[#262626] text-[#fafafa] hover:bg-[#1a1a1a] rounded-full gap-2 bg-transparent"
                 >
-                  <Wallet className="w-4 h-4" />
+                  {walletLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wallet className="w-4 h-4" />
+                  )}
                   Connect Wallet
                 </Button>
               )}
