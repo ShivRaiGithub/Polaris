@@ -458,17 +458,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
-
-## 🙏 Acknowledgments
-
-- **Stellar Development Foundation** - For Soroban smart contract platform
-- **iden3** - For Circom and snarkjs ZK-SNARK tools
-- **Hermez Network** - For Powers of Tau ceremony files
-- **EasyOCR Community** - For open-source OCR capabilities
-- **Vercel** - For Next.js framework and hosting
-
----
+----
 
 ## �📞 Contact & Support
 
