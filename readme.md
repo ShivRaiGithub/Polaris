@@ -1308,4 +1308,281 @@ Your **Polaris ZK Identity Verification System** is fully operational!
 
 ---
 
+## 🚀 Future Scope & Roadmap
+
+### Phase 1: Core Enhancements (Q1 2026)
+
+- [ ] **Multi-Country Support**
+  - Add support for international documents (US SSN, UK Passport, EU ID)
+  - Localization for multiple languages
+  - Country-specific validation rules
+
+- [ ] **Advanced ZK Features**
+  - Range proofs (prove age is between 18-65 without exact DOB)
+  - Selective disclosure (choose which attributes to reveal)
+  - Recursive proofs for complex verifications
+
+- [ ] **Mobile Applications**
+  - React Native mobile app for iOS/Android
+  - QR code scanning for in-person verification
+  - Biometric authentication integration
+
+### Phase 2: Enterprise Features (Q2 2026)
+
+- [ ] **Business Integration**
+  - REST API with API keys for enterprise clients
+  - Webhooks for real-time verification notifications
+  - Bulk verification endpoints
+  - White-label solutions
+
+- [ ] **Compliance & Auditing**
+  - GDPR compliance tools
+  - Audit trail and logging
+  - Regulatory reporting dashboard
+  - Third-party security audits
+
+- [ ] **Advanced OCR**
+  - Support for more document types (voter ID, health cards)
+  - Video KYC (liveness detection)
+  - Document authenticity verification (holograms, watermarks)
+
+### Phase 3: Ecosystem Expansion (Q3 2026)
+
+- [ ] **DeFi Integration**
+  - Age-gated DeFi protocols (18+ only pools)
+  - KYC-compliant DEX listings
+  - Credit scoring based on verified identity
+
+- [ ] **Cross-Chain Support**
+  - Bridge to Ethereum, Polygon, Solana
+  - Multi-chain identity portability
+  - Universal identity standard
+
+- [ ] **DAO Governance**
+  - Community voting on verification criteria
+  - Token-based governance model
+  - Decentralized dispute resolution
+
+### Phase 4: Advanced Features (Q4 2026)
+
+- [ ] **Privacy Enhancements**
+  - Zero-knowledge machine learning models
+  - Homomorphic encryption for data processing
+  - Anonymous credentials (Idemix, U-Prove)
+
+- [ ] **Decentralized Storage**
+  - IPFS integration for encrypted document storage
+  - Filecoin for long-term archival
+  - User-controlled data vaults
+
+- [ ] **AI/ML Integration**
+  - Fraud detection using ML models
+  - Risk scoring and anomaly detection
+  - Automated document classification
+
+### Long-Term Vision (2027+)
+
+- [ ] **Global Identity Network**
+  - Interoperable identity verification across platforms
+  - Universal reputation system
+  - Decentralized identity standard (W3C DID)
+
+- [ ] **Social Impact**
+  - Financial inclusion for unbanked populations
+  - Portable identity for refugees
+  - Digital citizenship solutions
+
+- [ ] **Research & Innovation**
+  - Quantum-resistant cryptography
+  - New ZK-SNARK schemes (PLONK, STARKs)
+  - Academic partnerships and publications
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Areas
+
+- 🔐 Zero-knowledge circuit optimization
+- 🎨 Frontend UI/UX improvements
+- 🐍 OCR accuracy enhancements
+- 📱 Mobile app development
+- 📚 Documentation and tutorials
+- 🧪 Testing and quality assurance
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Stellar Development Foundation** - For Soroban smart contract platform
+- **iden3** - For Circom and snarkjs ZK-SNARK tools
+- **Hermez Network** - For Powers of Tau ceremony files
+- **EasyOCR Community** - For open-source OCR capabilities
+- **Vercel** - For Next.js framework and hosting
+
+---
+
+## � Future Scope & Roadmap
+
+### Phase 1: Core Enhancements (Q1 2026)
+
+- [ ] **Multi-Country Support**
+  - Add support for international documents (US SSN, UK Passport, EU ID)
+  - Localization for multiple languages
+  - Country-specific validation rules
+
+- [ ] **Advanced ZK Features**
+  - Range proofs (prove age is between 18-65 without exact DOB)
+  - Selective disclosure (choose which attributes to reveal)
+  - Recursive proofs for complex verifications
+
+- [ ] **Mobile Applications**
+  - React Native mobile app for iOS/Android
+  - QR code scanning for in-person verification
+  - Biometric authentication integration
+
+### Phase 2: Enterprise Features (Q2 2026)
+
+- [ ] **Business Integration**
+  - REST API with API keys for enterprise clients
+  - Webhooks for real-time verification notifications
+  - Bulk verification endpoints
+  - White-label solutions
+
+- [ ] **Compliance & Auditing**
+  - GDPR compliance tools
+  - Audit trail and logging
+  - Regulatory reporting dashboard
+  - Third-party security audits
+
+- [ ] **Advanced OCR**
+  - Support for more document types (voter ID, health cards)
+  - Video KYC (liveness detection)
+  - Document authenticity verification (holograms, watermarks)
+
+### Phase 3: Ecosystem Expansion (Q3 2026)
+
+- [ ] **DeFi Integration**
+  - Age-gated DeFi protocols (18+ only pools)
+  - KYC-compliant DEX listings
+  - Credit scoring based on verified identity
+
+- [ ] **Cross-Chain Support**
+  - Bridge to Ethereum, Polygon, Solana
+  - Multi-chain identity portability
+  - Universal identity standard
+
+- [ ] **DAO Governance**
+  - Community voting on verification criteria
+  - Token-based governance model
+  - Decentralized dispute resolution
+
+### Phase 4: Advanced Features (Q4 2026)
+
+- [ ] **Privacy Enhancements**
+  - Zero-knowledge machine learning models
+  - Homomorphic encryption for data processing
+  - Anonymous credentials (Idemix, U-Prove)
+
+- [ ] **Decentralized Storage**
+  - IPFS integration for encrypted document storage
+  - Filecoin for long-term archival
+  - User-controlled data vaults
+
+- [ ] **AI/ML Integration**
+  - Fraud detection using ML models
+  - Risk scoring and anomaly detection
+  - Automated document classification
+
+### Long-Term Vision (2027+)
+
+- [ ] **Global Identity Network**
+  - Interoperable identity verification across platforms
+  - Universal reputation system
+  - Decentralized identity standard (W3C DID)
+
+- [ ] **Social Impact**
+  - Financial inclusion for unbanked populations
+  - Portable identity for refugees
+  - Digital citizenship solutions
+
+- [ ] **Research & Innovation**
+  - Quantum-resistant cryptography
+  - New ZK-SNARK schemes (PLONK, STARKs)
+  - Academic partnerships and publications
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Areas
+
+- 🔐 Zero-knowledge circuit optimization
+- 🎨 Frontend UI/UX improvements
+- 🐍 OCR accuracy enhancements
+- 📱 Mobile app development
+- 📚 Documentation and tutorials
+- 🧪 Testing and quality assurance
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Stellar Development Foundation** - For Soroban smart contract platform
+- **iden3** - For Circom and snarkjs ZK-SNARK tools
+- **Hermez Network** - For Powers of Tau ceremony files
+- **EasyOCR Community** - For open-source OCR capabilities
+- **Vercel** - For Next.js framework and hosting
+
+---
+
+## �📞 Contact & Support
+
+- **GitHub Issues:** [Report bugs or request features](https://github.com/yourusername/polaris/issues)
+- **Discord:** [Join our community](https://discord.gg/polaris) (Coming Soon)
+- **Twitter:** [@PolarisZK](https://twitter.com/polariszk) (Coming Soon)
+- **Email:** support@polaris.dev (Coming Soon)
+
+---
+
+<div align="center">
+
 **Built with ❤️ using ZK-SNARKs on Stellar**
+
+⭐ Star us on GitHub if you find this project useful!
+
+[Documentation](docs/) • [API Reference](docs/API.md) • [Tutorials](docs/tutorials/)
+
+</div>
