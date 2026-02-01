@@ -1,0 +1,8 @@
+flask
+flask-cors
+pillow
+numpy==1.26.4
+opencv-python
+easyocr
+torch
+torchvision

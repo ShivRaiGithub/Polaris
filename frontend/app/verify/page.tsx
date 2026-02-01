@@ -3,7 +3,7 @@
 import React from "react"
 import { useState } from "react"
 import Link from "next/link"
-import { Shield, Wallet, Loader2, CheckCircle, AlertCircle, ExternalLink } from "lucide-react"
+import { Shield, Wallet, Loader2, CheckCircle, AlertCircle, ExternalLink, Upload, FileText, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { StellarBackground } from "@/components/stellar-background"
@@ -34,6 +34,36 @@ interface VerificationResponse {
   requiresSignature?: boolean
 }
 
+interface OCRResponse {
+  success: boolean
+  data?: {
+    name: string
+    dob: string
+    age: number | null
+    gender: string
+    idType: string
+  }
+  error?: string
+}
+
+interface ExtractedIdentityData {
+  name: string
+  dob: {
+    day: string
+    month: string
+    year: string
+  }
+  gender: string
+  docType: string
+  docId: string
+  minAge: number
+  secretSalt: string
+  currentYear: string
+  currentMonth: string
+  currentDay: string
+  genderFilter: number
+}
+
 export default function VerifyPage() {
   const { 
     walletConnected, 
@@ -51,6 +81,14 @@ export default function VerifyPage() {
   const [success, setSuccess] = useState<VerificationResponse | null>(null)
   const [registrationStep, setRegistrationStep] = useState<string>("")
   const [userInfo, setUserInfo] = useState<any>(null)
+  
+  // Document upload states
+  const [selectedDocType, setSelectedDocType] = useState<string>("aadhaar")
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false)
+  const [extractedData, setExtractedData] = useState<ExtractedIdentityData | null>(null)
+  const [ocrError, setOcrError] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   // Fetch user info when wallet connects
   React.useEffect(() => {
     if (walletConnected && walletAddress) {
@@ -68,6 +106,163 @@ export default function VerifyPage() {
       }
     } catch (error) {
       console.error("Failed to fetch user info:", error)
+    }
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setUploadedFile(file)
+      setOcrError(null)
+      setExtractedData(null)
+      
+      // Create preview URL
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+    }
+  }
+
+  const handleDocTypeChange = (docType: string) => {
+    setSelectedDocType(docType)
+    setOcrError(null)
+  }
+
+  const handleRemoveFile = () => {
+    setUploadedFile(null)
+    setExtractedData(null)
+    setOcrError(null)
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(null)
+    }
+  }
+
+  const handleProcessDocument = async () => {
+    if (!uploadedFile) {
+      setOcrError("Please upload a document first")
+      return
+    }
+
+    setIsProcessingOCR(true)
+    setOcrError(null)
+    setExtractedData(null)
+
+    try {
+      const formData = new FormData()
+      formData.append("image", uploadedFile)
+      
+      // Map document type to numeric code (1=Aadhaar, 2=PAN, 3=DL, 4=Passport)
+      const docTypeMap: Record<string, string> = {
+        "aadhaar": "1",
+        "pan": "2",
+        "driving_license": "3",
+        "passport": "4",
+      }
+      formData.append("docType", docTypeMap[selectedDocType] || "1")
+
+      // Send to Python OCR server
+      const response = await fetch("http://localhost:5000/extract", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to process document")
+      }
+
+      // Parse OCR response
+      const ocrData = result.results?.[0]?.data || result.data
+      
+      if (!ocrData) {
+        throw new Error("No data extracted from document")
+      }
+
+      // Parse DOB from various formats (DD/MM/YYYY, MM/DD/YYYY, etc.)
+      let day = "01"
+      let month = "01"
+      let year = "2000"
+
+      if (ocrData.dob && ocrData.dob !== "Not found") {
+        const dobParts = ocrData.dob.split(/[\/\-\.]/)
+        if (dobParts.length === 3) {
+          // Assume DD/MM/YYYY format (common in Indian documents)
+          day = dobParts[0].padStart(2, '0')
+          month = dobParts[1].padStart(2, '0')
+          year = dobParts[2]
+        }
+      }
+
+      // Calculate user's age
+      const today = new Date()
+      const birthDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+
+      // Determine minimum age requirement based on actual age
+      // Check 21+ first, then 18+, else both will be false
+      let minAge = 0
+      if (age >= 21) {
+        minAge = 21
+      } else if (age >= 18) {
+        minAge = 18
+      }
+
+      // Map OCR gender to circuit gender code
+      let genderCode = "0" // Default to "Other"
+      if (ocrData.gender) {
+        const genderLower = ocrData.gender.toLowerCase()
+        if (genderLower.includes("male") && !genderLower.includes("female")) {
+          genderCode = "1" // Male
+        } else if (genderLower.includes("female")) {
+          genderCode = "2" // Female
+        }
+      }
+
+      // Map document type to circuit doc type code (1-4, not 0-3)
+      let docTypeCode = selectedDocType
+      const docTypeMapping: Record<string, string> = {
+        "aadhaar": "1",
+        "pan": "2",
+        "driving_license": "3",
+        "passport": "4",
+      }
+      
+      // Use the selected document type from user selection
+      if (docTypeMapping[selectedDocType]) {
+        docTypeCode = docTypeMapping[selectedDocType]
+      }
+
+      // Create extracted identity data
+      const identityData: ExtractedIdentityData = {
+        name: ocrData.name || "Not Found",
+        dob: {
+          day,
+          month,
+          year,
+        },
+        gender: genderCode,
+        docType: docTypeCode,
+        docId: `DOC${Date.now()}`, // Generate a unique doc ID
+        minAge: minAge, // Age requirement based on actual age (21 if 21+, 18 if 18+, 0 otherwise)
+        secretSalt: Math.floor(Math.random() * 1000000).toString(), // Random salt for privacy
+        currentYear: today.getFullYear().toString(),
+        currentMonth: (today.getMonth() + 1).toString(),
+        currentDay: today.getDate().toString(),
+        genderFilter: 0, // No gender filter by default
+      }
+
+      setExtractedData(identityData)
+      console.log("Extracted Identity Data:", identityData)
+    } catch (err) {
+      console.error("OCR Error:", err)
+      setOcrError(err instanceof Error ? err.message : "Failed to process document")
+    } finally {
+      setIsProcessingOCR(false)
     }
   }
   const handlePrepayment = async () => {
@@ -142,13 +337,18 @@ export default function VerifyPage() {
       return
     }
 
+    if (!extractedData) {
+      setError("Please upload and process a document first")
+      return
+    }
+
     setError(null)
     setIsRegistering(true)
     setSuccess(null)
     setRegistrationStep("Preparing registration...")
 
     try {
-      // Send registration request to backend (backend handles everything)
+      // Send registration request to backend using extracted data
       setRegistrationStep("Generating ZK proof and submitting to blockchain...")
       const response = await fetch(API_ENDPOINTS.REGISTER, {
         method: "POST",
@@ -157,7 +357,7 @@ export default function VerifyPage() {
         },
         body: JSON.stringify({
           userAddress: walletAddress,
-          identityData: TEST_IDENTITY_DATA,
+          identityData: extractedData,
         }),
       })
 
@@ -401,49 +601,209 @@ export default function VerifyPage() {
               </Card>
             )}
 
-            {/* Identity Data Card */}
+            {/* Document Upload Card */}
             {walletConnected && (
               <Card className="bg-[#111111] border-[#262626]">
                 <CardHeader>
                   <CardTitle className="text-[#fafafa] flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-[#a78bfa]" />
-                    Identity Information (Test Data)
+                    <Upload className="w-5 h-5 text-[#a78bfa]" />
+                    Upload Document
                   </CardTitle>
                   <CardDescription className="text-[#a3a3a3]">
-                    Using pre-configured test data for demo purposes
+                    Upload your identity document for OCR extraction
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Document Type Selection */}
+                  <div>
+                    <label className="text-[#fafafa] text-sm font-medium mb-3 block">
+                      Select Document Type
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {[
+                        { value: "aadhaar", label: "Aadhaar" },
+                        { value: "pan", label: "PAN" },
+                        { value: "driving_license", label: "Driving License" },
+                        { value: "passport", label: "Passport" },
+                      ].map((docType) => (
+                        <button
+                          key={docType.value}
+                          onClick={() => handleDocTypeChange(docType.value)}
+                          className={`p-3 rounded-xl border-2 transition-all ${
+                            selectedDocType === docType.value
+                              ? "border-[#a78bfa] bg-[#a78bfa]/10 text-[#a78bfa]"
+                              : "border-[#262626] bg-[#1a1a1a] text-[#a3a3a3] hover:border-[#404040]"
+                          }`}
+                        >
+                          <FileText className="w-5 h-5 mx-auto mb-1" />
+                          <span className="text-xs font-medium">{docType.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* File Upload */}
+                  <div>
+                    <label className="text-[#fafafa] text-sm font-medium mb-3 block">
+                      Upload Document Image
+                    </label>
+                    
+                    {!uploadedFile ? (
+                      <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-[#262626] rounded-xl cursor-pointer bg-[#1a1a1a] hover:bg-[#1a1a1a]/80 hover:border-[#404040] transition-all">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-10 h-10 mb-3 text-[#a3a3a3]" />
+                          <p className="mb-2 text-sm text-[#a3a3a3]">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p className="text-xs text-[#737373]">PNG, JPG or JPEG (MAX. 10MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                        />
+                      </label>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* Preview */}
+                        {previewUrl && (
+                          <div className="relative w-full h-48 bg-[#1a1a1a] rounded-xl overflow-hidden">
+                            <img
+                              src={previewUrl}
+                              alt="Document preview"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* File Info */}
+                        <div className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-[#a78bfa]" />
+                            <div>
+                              <p className="text-[#fafafa] text-sm font-medium">{uploadedFile.name}</p>
+                              <p className="text-[#737373] text-xs">
+                                {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleRemoveFile}
+                            className="p-2 hover:bg-[#262626] rounded-lg transition-colors"
+                          >
+                            <X className="w-5 h-5 text-[#a3a3a3]" />
+                          </button>
+                        </div>
+
+                        {/* Process Button */}
+                        <Button
+                          onClick={handleProcessDocument}
+                          disabled={isProcessingOCR}
+                          className="w-full bg-[#a78bfa] text-[#0a0a0a] hover:bg-[#a78bfa]/90"
+                        >
+                          {isProcessingOCR ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing Document...
+                            </>
+                          ) : (
+                            <>
+                              <FileText className="w-4 h-4 mr-2" />
+                              Extract Information
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* OCR Error */}
+                  {ocrError && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                        <p>{ocrError}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Extracted Data Preview */}
+                  {extractedData && (
+                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                        <span className="text-green-400 font-semibold">Data Extracted Successfully</span>
+                      </div>
+                      <div className="grid gap-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-[#a3a3a3]">Name:</span>
+                          <span className="text-[#fafafa]">{extractedData.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#a3a3a3]">Date of Birth:</span>
+                          <span className="text-[#fafafa]">
+                            {extractedData.dob.day}/{extractedData.dob.month}/{extractedData.dob.year}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#a3a3a3]">Gender:</span>
+                          <span className="text-[#fafafa]">
+                            {extractedData.gender === "1" ? "Male" : extractedData.gender === "2" ? "Female" : "Other"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Identity Data Card - Only show if data is extracted */}
+            {walletConnected && extractedData && (
+              <Card className="bg-[#111111] border-[#262626]">
+                <CardHeader>
+                  <CardTitle className="text-[#fafafa] flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-[#a78bfa]" />
+                    Identity Information (Extracted from Document)
+                  </CardTitle>
+                  <CardDescription className="text-[#a3a3a3]">
+                    Review the extracted information before registration
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid gap-4">
                     <div className="flex justify-between items-center p-4 bg-[#1a1a1a] rounded-xl">
                       <span className="text-[#a3a3a3]">Name</span>
-                      <span className="text-[#fafafa] font-medium">{TEST_IDENTITY_DATA.name}</span>
+                      <span className="text-[#fafafa] font-medium">{extractedData.name}</span>
                     </div>
                     <div className="flex justify-between items-center p-4 bg-[#1a1a1a] rounded-xl">
                       <span className="text-[#a3a3a3]">Date of Birth</span>
                       <span className="text-[#fafafa] font-medium">
-                        {TEST_IDENTITY_DATA.dob.day}/{TEST_IDENTITY_DATA.dob.month}/{TEST_IDENTITY_DATA.dob.year}
+                        {extractedData.dob.day}/{extractedData.dob.month}/{extractedData.dob.year}
                       </span>
                     </div>
                     <div className="flex justify-between items-center p-4 bg-[#1a1a1a] rounded-xl">
                       <span className="text-[#a3a3a3]">Gender</span>
                       <span className="text-[#fafafa] font-medium">
-                        {GENDER_OPTIONS[TEST_IDENTITY_DATA.gender as keyof typeof GENDER_OPTIONS]}
+                        {extractedData.gender === "1" ? "Male" : extractedData.gender === "2" ? "Female" : "Other"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center p-4 bg-[#1a1a1a] rounded-xl">
                       <span className="text-[#a3a3a3]">Document Type</span>
                       <span className="text-[#fafafa] font-medium">
-                        {DOCUMENT_TYPES[TEST_IDENTITY_DATA.docType as keyof typeof DOCUMENT_TYPES]}
+                        {extractedData.docType === "1" ? "Aadhaar" : 
+                         extractedData.docType === "2" ? "PAN" : 
+                         extractedData.docType === "3" ? "Driving License" : "Passport"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center p-4 bg-[#1a1a1a] rounded-xl">
                       <span className="text-[#a3a3a3]">Document ID</span>
-                      <span className="text-[#fafafa] font-medium font-mono">{TEST_IDENTITY_DATA.docId}</span>
+                      <span className="text-[#fafafa] font-medium font-mono">{extractedData.docId}</span>
                     </div>
                     <div className="flex justify-between items-center p-4 bg-[#1a1a1a] rounded-xl">
                       <span className="text-[#a3a3a3]">Age Requirement</span>
-                      <span className="text-[#fafafa] font-medium">{TEST_IDENTITY_DATA.minAge}+ years</span>
+                      <span className="text-[#fafafa] font-medium">{extractedData.minAge}+ years</span>
                     </div>
                   </div>
 
@@ -461,6 +821,7 @@ export default function VerifyPage() {
                     disabled={
                       isRegistering || 
                       !walletConnected || 
+                      !extractedData ||
                       ((userInfo?.docCount || 0) >= 1 && (userInfo?.prepaidCredits || 0) === 0)
                     }
                     className="w-full bg-[#fbbf24] text-[#0a0a0a] hover:bg-[#fbbf24]/90 py-6 text-lg font-semibold"

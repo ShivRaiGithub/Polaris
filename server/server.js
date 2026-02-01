@@ -91,8 +91,8 @@ async function submitToSoroban(userAddress, commitmentHashHex, nullifierHex, ide
     const adminAccount = await server.getAccount(adminKey.publicKey());
     
     // Extract verification attributes from identityData
-    const minAgeVerified = identityData.minAge || 18;
-    const documentType = identityData.docType;
+    const minAgeVerified = parseInt(identityData.minAge) || 18;
+    const documentType = parseInt(identityData.docType) || 1;
     const genderVerified = identityData.genderFilter !== 0;
     
     const tx = new TransactionBuilder(adminAccount, { fee: "200000", networkPassphrase: NETWORK_PASSPHRASE })
@@ -269,13 +269,13 @@ app.post("/api/register", async (req, res) => {
         // Helper function to get document type name
         const getDocTypeName = (code) => {
             const types = {
-                1: "Passport",
+                1: "Aadhaar Card",
                 2: "PAN Card",
                 3: "Driver's License",
-                4: "Aadhaar Card",
+                4: "Passport",
                 5: "Other ID"
             };
-            return types[code] || "Unknown";
+            return types[parseInt(code)] || "Unknown";
         };
 
         // Return success response
@@ -291,7 +291,7 @@ app.post("/api/register", async (req, res) => {
                 ageOver21: (identityData.minAge || 18) >= 21,
                 documentType: getDocTypeName(identityData.docType),
                 documentTypeCode: identityData.docType,
-                genderVerified: identityData.genderFilter !== 0,
+                genderVerified: parseInt(identityData.gender) !== 0, // Gender verified if not "Other" (1=Male, 2=Female)
             }
         });
 
