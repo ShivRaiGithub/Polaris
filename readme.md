@@ -481,7 +481,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Built with ❤️ using ZK-SNARKs on Stellar**
 
 ⭐ Star us on GitHub if you find this project useful!
 
