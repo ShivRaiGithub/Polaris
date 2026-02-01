@@ -1,0 +1,20 @@
+{
+  "name_hash": "12345678901234567890",
+  "dob_year": "1995",
+  "dob_month": "6",
+  "dob_day": "15",
+  "gender": "1",
+  "aadhar_number": "123456789012",
+  "pan_number": "0",
+  "state_code": "14",
+  "document_type": "1",
+  "secret_salt": "987654321098765432109876543210",
+  "current_year": "2026",
+  "current_month": "1",
+  "current_day": "31",
+  "min_age_requirement": "18",
+  "required_country": "1",
+  "gender_filter": "0",
+  "require_aadhar": "1",
+  "require_pan": "0"
+}
