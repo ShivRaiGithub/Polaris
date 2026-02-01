@@ -10,8 +10,486 @@
 - 📄 **Multi-Document Support** - Aadhaar, PAN, DL, Passport
 - 🎨 **Modern Frontend** - Next.js 16 with Tailwind CSS & Radix UI
 - 🐍 **OCR Processing** - Python server with EasyOCR for document scanning
-- ⚡ **Soroban Smart Contracts** - Deployed on Stellar testnet/mainnet
+- ⚡ **Soroban Smart Contracts** - Deployed on Stellar testnet
 - 🔗 **Freighter Wallet Integration** - Seamless Stellar wallet connection
+
+
+---
+
+## 📊 Quick Reference
+
+### Project Structure
+```
+polaris/
+├── circom/              # Circom compiler source
+├── circuits/            # ZK circuits
+│   ├── compiled/        # Built circuit files
+│   ├── ptau/           # Powers of Tau
+│   └── identity_verifier.circom
+├── contracts/           # Soroban smart contracts
+│   └── identity-verifier/
+├── frontend/            # Next.js frontend
+│   ├── app/            # App router pages
+│   ├── components/     # UI components
+│   └── lib/            # Utilities
+├── python_server/       # OCR server
+│   ├── app.py          # Flask application
+│   └── requirements.txt
+├── scripts/             # Automation scripts
+│   ├── compile-circuit.sh
+│   ├── deploy-contract.sh
+│   ├── test.cjs
+│   └── test-second-doc.cjs
+├── server/              # Node.js backend
+│   └── server.js
+├── package.json         # Backend dependencies
+└── .env                 # Configuration
+```
+
+### Key Commands
+
+| Task | Command |
+|------|---------|
+| Compile Circuit | `./scripts/compile-circuit.sh` |
+| Deploy Contract | `./scripts/deploy-contract.sh` |
+| Start Backend | `npm start` |
+| Start Python OCR | `python python_server/app.py` |
+| Start Frontend | `cd frontend && npm run dev` |
+| Test Flow | `node scripts/test.cjs` |
+| Build Frontend | `cd frontend && npm run build` |
+
+### Component Ports
+
+| Component | Port | URL |
+|-----------|------|-----|
+| Backend API | 3000 | http://localhost:3000 |
+| Frontend | 3001 | http://localhost:3001 |
+| Python OCR | 5000 | http://localhost:5000 |
+
+### Circuit Files
+
+| File | Description | Size |
+|------|-------------|------|
+| `identity_verifier.circom` | Circuit source | ~5KB |
+| `identity_verifier.r1cs` | Constraint system | ~200KB |
+| `identity_verifier_final.zkey` | Proving key | ~5MB |
+| `verification_key.json` | Verification key | ~1KB |
+
+### Contract Functions
+
+| Function | Description |
+|----------|-------------|
+| `initialize` | Initialize contract (once) |
+| `register_verified_identity` | Register identity with ZK proof |
+| `get_user_doc_count` | Get user's document count |
+| `check_verification` | Check if user is verified |
+
+---
+
+## 🆘 Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Circuit compilation fails | Check circom version >= 2.1.0, install circomlib |
+| Contract deploy fails | Check Stellar CLI installed, account funded |
+| Server won't start | Check .env has ADMIN_SECRET and CONTRACT_ID |
+| Proof generation slow | Normal, takes 5-15 seconds for first proof |
+| Transaction timeout | Check RPC_URL and network accessibility |
+| Payment required error | Provide userSecret for 2nd+ documents |
+| OCR extraction fails | Check image quality, supported document types |
+| Frontend build errors | Run `npm install` in frontend directory |
+| Python dependencies fail | Use Python 3.10+, create virtual environment |
+
+### Common Error Messages
+
+**"circom: command not found"**
+```bash
+cd circom && cargo install --path circom
+```
+
+**"stellar: command not found"**
+```bash
+cargo install --locked stellar-cli --features opt
+```
+
+**"No such file or directory: circuit_final.zkey"**
+```bash
+./scripts/compile-circuit.sh
+```
+
+**"Contract not initialized"**
+```bash
+node scripts/initialize-contract.cjs
+```
+
+**"EasyOCR models not found"**
+- First run downloads models (~140MB automatically)
+- Wait for download to complete
+
+---
+
+## ✅ Deployment Checklist
+
+### Development
+- [ ] Node.js v18+ installed
+- [ ] Rust & Cargo installed
+- [ ] Circom built from `circom/` directory
+- [ ] snarkjs installed globally
+- [ ] Stellar CLI installed
+- [ ] Python 3.10+ installed
+- [ ] Testnet account created & funded
+- [ ] Root `npm install` completed
+- [ ] Frontend `npm install` completed
+- [ ] Python `pip install -r requirements.txt` completed
+- [ ] `.env` file configured
+
+### Circuit
+- [ ] Circuit compiled (`circuit_final.zkey` exists)
+- [ ] Verification key exported
+- [ ] Circuit tested and validated
+
+### Contract
+- [ ] Contract built (WASM file exists)
+- [ ] Contract deployed (CONTRACT_ID saved)
+- [ ] Contract initialized
+- [ ] `.env` updated with CONTRACT_ID
+
+### Servers
+- [ ] Backend server running (port 3000)
+- [ ] Python OCR server running (port 5000)
+- [ ] Frontend dev server running (port 3001)
+- [ ] All health checks passing
+
+### Testing
+- [ ] First document test passed
+- [ ] Second document test passed (payment)
+- [ ] API endpoints tested
+- [ ] OCR extraction tested
+- [ ] Frontend UI tested
+
+### Production
+- [ ] Mainnet contract deployed
+- [ ] PM2 configured
+- [ ] Nginx reverse proxy configured
+- [ ] SSL certificates installed
+- [ ] Environment variables updated
+- [ ] Monitoring enabled
+- [ ] Backups configured
+
+---
+
+## 🎉 You're All Set!
+
+Your **Polaris ZK Identity Verification System** is fully operational!
+
+### What You've Built:
+✅ Zero-knowledge proof circuits (Circom + Groth16)  
+✅ Soroban smart contracts on Stellar  
+✅ Node.js backend API  
+✅ Python OCR server with EasyOCR  
+✅ Modern Next.js frontend  
+✅ Complete identity verification flow
+
+### Next Steps:
+1. 🧪 Test with real documents
+2. 🎨 Customize frontend UI
+3. 📈 Add analytics & monitoring
+4. 🔐 Enhance security measures
+5. 🚀 Deploy to production
+
+---
+
+## 📚 Additional Resources
+
+- [Stellar Documentation](https://developers.stellar.org/)
+- [Soroban Docs](https://soroban.stellar.org/docs)
+- [Circom Documentation](https://docs.circom.io/)
+- [snarkjs Guide](https://github.com/iden3/snarkjs)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [EasyOCR Documentation](https://github.com/JaidedAI/EasyOCR)
+
+---
+
+## 🚀 Future Scope & Roadmap
+
+### Phase 1: Core Enhancements (Q1 2026)
+
+- [ ] **Multi-Country Support**
+  - Add support for international documents (US SSN, UK Passport, EU ID)
+  - Localization for multiple languages
+  - Country-specific validation rules
+
+- [ ] **Advanced ZK Features**
+  - Range proofs (prove age is between 18-65 without exact DOB)
+  - Selective disclosure (choose which attributes to reveal)
+  - Recursive proofs for complex verifications
+
+- [ ] **Mobile Applications**
+  - React Native mobile app for iOS/Android
+  - QR code scanning for in-person verification
+  - Biometric authentication integration
+
+### Phase 2: Enterprise Features (Q2 2026)
+
+- [ ] **Business Integration**
+  - REST API with API keys for enterprise clients
+  - Webhooks for real-time verification notifications
+  - Bulk verification endpoints
+  - White-label solutions
+
+- [ ] **Compliance & Auditing**
+  - GDPR compliance tools
+  - Audit trail and logging
+  - Regulatory reporting dashboard
+  - Third-party security audits
+
+- [ ] **Advanced OCR**
+  - Support for more document types (voter ID, health cards)
+  - Video KYC (liveness detection)
+  - Document authenticity verification (holograms, watermarks)
+
+### Phase 3: Ecosystem Expansion (Q3 2026)
+
+- [ ] **DeFi Integration**
+  - Age-gated DeFi protocols (18+ only pools)
+  - KYC-compliant DEX listings
+  - Credit scoring based on verified identity
+
+- [ ] **Cross-Chain Support**
+  - Bridge to Ethereum, Polygon, Solana
+  - Multi-chain identity portability
+  - Universal identity standard
+
+- [ ] **DAO Governance**
+  - Community voting on verification criteria
+  - Token-based governance model
+  - Decentralized dispute resolution
+
+### Phase 4: Advanced Features (Q4 2026)
+
+- [ ] **Privacy Enhancements**
+  - Zero-knowledge machine learning models
+  - Homomorphic encryption for data processing
+  - Anonymous credentials (Idemix, U-Prove)
+
+- [ ] **Decentralized Storage**
+  - IPFS integration for encrypted document storage
+  - Filecoin for long-term archival
+  - User-controlled data vaults
+
+- [ ] **AI/ML Integration**
+  - Fraud detection using ML models
+  - Risk scoring and anomaly detection
+  - Automated document classification
+
+### Long-Term Vision (2027+)
+
+- [ ] **Global Identity Network**
+  - Interoperable identity verification across platforms
+  - Universal reputation system
+  - Decentralized identity standard (W3C DID)
+
+- [ ] **Social Impact**
+  - Financial inclusion for unbanked populations
+  - Portable identity for refugees
+  - Digital citizenship solutions
+
+- [ ] **Research & Innovation**
+  - Quantum-resistant cryptography
+  - New ZK-SNARK schemes (PLONK, STARKs)
+  - Academic partnerships and publications
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Areas
+
+- 🔐 Zero-knowledge circuit optimization
+- 🎨 Frontend UI/UX improvements
+- 🐍 OCR accuracy enhancements
+- 📱 Mobile app development
+- 📚 Documentation and tutorials
+- 🧪 Testing and quality assurance
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Stellar Development Foundation** - For Soroban smart contract platform
+- **iden3** - For Circom and snarkjs ZK-SNARK tools
+- **Hermez Network** - For Powers of Tau ceremony files
+- **EasyOCR Community** - For open-source OCR capabilities
+- **Vercel** - For Next.js framework and hosting
+
+---
+
+## � Future Scope & Roadmap
+
+### Phase 1: Core Enhancements (Q1 2026)
+
+- [ ] **Multi-Country Support**
+  - Add support for international documents (US SSN, UK Passport, EU ID)
+  - Localization for multiple languages
+  - Country-specific validation rules
+
+- [ ] **Advanced ZK Features**
+  - Range proofs (prove age is between 18-65 without exact DOB)
+  - Selective disclosure (choose which attributes to reveal)
+  - Recursive proofs for complex verifications
+
+- [ ] **Mobile Applications**
+  - React Native mobile app for iOS/Android
+  - QR code scanning for in-person verification
+  - Biometric authentication integration
+
+### Phase 2: Enterprise Features (Q2 2026)
+
+- [ ] **Business Integration**
+  - REST API with API keys for enterprise clients
+  - Webhooks for real-time verification notifications
+  - Bulk verification endpoints
+  - White-label solutions
+
+- [ ] **Compliance & Auditing**
+  - GDPR compliance tools
+  - Audit trail and logging
+  - Regulatory reporting dashboard
+  - Third-party security audits
+
+- [ ] **Advanced OCR**
+  - Support for more document types (voter ID, health cards)
+  - Video KYC (liveness detection)
+  - Document authenticity verification (holograms, watermarks)
+
+### Phase 3: Ecosystem Expansion (Q3 2026)
+
+- [ ] **DeFi Integration**
+  - Age-gated DeFi protocols (18+ only pools)
+  - KYC-compliant DEX listings
+  - Credit scoring based on verified identity
+
+- [ ] **Cross-Chain Support**
+  - Bridge to Ethereum, Polygon, Solana
+  - Multi-chain identity portability
+  - Universal identity standard
+
+- [ ] **DAO Governance**
+  - Community voting on verification criteria
+  - Token-based governance model
+  - Decentralized dispute resolution
+
+### Phase 4: Advanced Features (Q4 2026)
+
+- [ ] **Privacy Enhancements**
+  - Zero-knowledge machine learning models
+  - Homomorphic encryption for data processing
+  - Anonymous credentials (Idemix, U-Prove)
+
+- [ ] **Decentralized Storage**
+  - IPFS integration for encrypted document storage
+  - Filecoin for long-term archival
+  - User-controlled data vaults
+
+- [ ] **AI/ML Integration**
+  - Fraud detection using ML models
+  - Risk scoring and anomaly detection
+  - Automated document classification
+
+### Long-Term Vision (2027+)
+
+- [ ] **Global Identity Network**
+  - Interoperable identity verification across platforms
+  - Universal reputation system
+  - Decentralized identity standard (W3C DID)
+
+- [ ] **Social Impact**
+  - Financial inclusion for unbanked populations
+  - Portable identity for refugees
+  - Digital citizenship solutions
+
+- [ ] **Research & Innovation**
+  - Quantum-resistant cryptography
+  - New ZK-SNARK schemes (PLONK, STARKs)
+  - Academic partnerships and publications
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Areas
+
+- 🔐 Zero-knowledge circuit optimization
+- 🎨 Frontend UI/UX improvements
+- 🐍 OCR accuracy enhancements
+- 📱 Mobile app development
+- 📚 Documentation and tutorials
+- 🧪 Testing and quality assurance
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Stellar Development Foundation** - For Soroban smart contract platform
+- **iden3** - For Circom and snarkjs ZK-SNARK tools
+- **Hermez Network** - For Powers of Tau ceremony files
+- **EasyOCR Community** - For open-source OCR capabilities
+- **Vercel** - For Next.js framework and hosting
+
+---
+
+## �📞 Contact & Support
+
+- **GitHub Issues:** [Report bugs or request features](https://github.com/yourusername/polaris/issues)
+- **Discord:** [Join our community](https://discord.gg/polaris) (Coming Soon)
+- **Twitter:** [@PolarisZK](https://twitter.com/polariszk) (Coming Soon)
+- **Email:** support@polaris.dev (Coming Soon)
+
+---
+
+<div align="center">
+
+**Built with ❤️ using ZK-SNARKs on Stellar**
+
+⭐ Star us on GitHub if you find this project useful!
+
+[Documentation](docs/) • [API Reference](docs/API.md) • [Tutorials](docs/tutorials/)
+
+</div>
+
+
 
 ---
 
@@ -1111,478 +1589,3 @@ tar -czf backups/circuit-keys-$(date +%Y%m%d).tar.gz \
 # Backup to cloud (example)
 # aws s3 sync backups/ s3://your-bucket/polaris-backups/
 ```
-
----
-
-## 📊 Quick Reference
-
-### Project Structure
-```
-polaris/
-├── circom/              # Circom compiler source
-├── circuits/            # ZK circuits
-│   ├── compiled/        # Built circuit files
-│   ├── ptau/           # Powers of Tau
-│   └── identity_verifier.circom
-├── contracts/           # Soroban smart contracts
-│   └── identity-verifier/
-├── frontend/            # Next.js frontend
-│   ├── app/            # App router pages
-│   ├── components/     # UI components
-│   └── lib/            # Utilities
-├── python_server/       # OCR server
-│   ├── app.py          # Flask application
-│   └── requirements.txt
-├── scripts/             # Automation scripts
-│   ├── compile-circuit.sh
-│   ├── deploy-contract.sh
-│   ├── test.cjs
-│   └── test-second-doc.cjs
-├── server/              # Node.js backend
-│   └── server.js
-├── package.json         # Backend dependencies
-└── .env                 # Configuration
-```
-
-### Key Commands
-
-| Task | Command |
-|------|---------|
-| Compile Circuit | `./scripts/compile-circuit.sh` |
-| Deploy Contract | `./scripts/deploy-contract.sh` |
-| Start Backend | `npm start` |
-| Start Python OCR | `python python_server/app.py` |
-| Start Frontend | `cd frontend && npm run dev` |
-| Test Flow | `node scripts/test.cjs` |
-| Build Frontend | `cd frontend && npm run build` |
-
-### Component Ports
-
-| Component | Port | URL |
-|-----------|------|-----|
-| Backend API | 3000 | http://localhost:3000 |
-| Frontend | 3001 | http://localhost:3001 |
-| Python OCR | 5000 | http://localhost:5000 |
-
-### Circuit Files
-
-| File | Description | Size |
-|------|-------------|------|
-| `identity_verifier.circom` | Circuit source | ~5KB |
-| `identity_verifier.r1cs` | Constraint system | ~200KB |
-| `identity_verifier_final.zkey` | Proving key | ~5MB |
-| `verification_key.json` | Verification key | ~1KB |
-
-### Contract Functions
-
-| Function | Description |
-|----------|-------------|
-| `initialize` | Initialize contract (once) |
-| `register_verified_identity` | Register identity with ZK proof |
-| `get_user_doc_count` | Get user's document count |
-| `check_verification` | Check if user is verified |
-
----
-
-## 🆘 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Circuit compilation fails | Check circom version >= 2.1.0, install circomlib |
-| Contract deploy fails | Check Stellar CLI installed, account funded |
-| Server won't start | Check .env has ADMIN_SECRET and CONTRACT_ID |
-| Proof generation slow | Normal, takes 5-15 seconds for first proof |
-| Transaction timeout | Check RPC_URL and network accessibility |
-| Payment required error | Provide userSecret for 2nd+ documents |
-| OCR extraction fails | Check image quality, supported document types |
-| Frontend build errors | Run `npm install` in frontend directory |
-| Python dependencies fail | Use Python 3.10+, create virtual environment |
-
-### Common Error Messages
-
-**"circom: command not found"**
-```bash
-cd circom && cargo install --path circom
-```
-
-**"stellar: command not found"**
-```bash
-cargo install --locked stellar-cli --features opt
-```
-
-**"No such file or directory: circuit_final.zkey"**
-```bash
-./scripts/compile-circuit.sh
-```
-
-**"Contract not initialized"**
-```bash
-node scripts/initialize-contract.cjs
-```
-
-**"EasyOCR models not found"**
-- First run downloads models (~140MB automatically)
-- Wait for download to complete
-
----
-
-## ✅ Deployment Checklist
-
-### Development
-- [ ] Node.js v18+ installed
-- [ ] Rust & Cargo installed
-- [ ] Circom built from `circom/` directory
-- [ ] snarkjs installed globally
-- [ ] Stellar CLI installed
-- [ ] Python 3.10+ installed
-- [ ] Testnet account created & funded
-- [ ] Root `npm install` completed
-- [ ] Frontend `npm install` completed
-- [ ] Python `pip install -r requirements.txt` completed
-- [ ] `.env` file configured
-
-### Circuit
-- [ ] Circuit compiled (`circuit_final.zkey` exists)
-- [ ] Verification key exported
-- [ ] Circuit tested and validated
-
-### Contract
-- [ ] Contract built (WASM file exists)
-- [ ] Contract deployed (CONTRACT_ID saved)
-- [ ] Contract initialized
-- [ ] `.env` updated with CONTRACT_ID
-
-### Servers
-- [ ] Backend server running (port 3000)
-- [ ] Python OCR server running (port 5000)
-- [ ] Frontend dev server running (port 3001)
-- [ ] All health checks passing
-
-### Testing
-- [ ] First document test passed
-- [ ] Second document test passed (payment)
-- [ ] API endpoints tested
-- [ ] OCR extraction tested
-- [ ] Frontend UI tested
-
-### Production
-- [ ] Mainnet contract deployed
-- [ ] PM2 configured
-- [ ] Nginx reverse proxy configured
-- [ ] SSL certificates installed
-- [ ] Environment variables updated
-- [ ] Monitoring enabled
-- [ ] Backups configured
-
----
-
-## 🎉 You're All Set!
-
-Your **Polaris ZK Identity Verification System** is fully operational!
-
-### What You've Built:
-✅ Zero-knowledge proof circuits (Circom + Groth16)  
-✅ Soroban smart contracts on Stellar  
-✅ Node.js backend API  
-✅ Python OCR server with EasyOCR  
-✅ Modern Next.js frontend  
-✅ Complete identity verification flow
-
-### Next Steps:
-1. 🧪 Test with real documents
-2. 🎨 Customize frontend UI
-3. 📈 Add analytics & monitoring
-4. 🔐 Enhance security measures
-5. 🚀 Deploy to production
-
----
-
-## 📚 Additional Resources
-
-- [Stellar Documentation](https://developers.stellar.org/)
-- [Soroban Docs](https://soroban.stellar.org/docs)
-- [Circom Documentation](https://docs.circom.io/)
-- [snarkjs Guide](https://github.com/iden3/snarkjs)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [EasyOCR Documentation](https://github.com/JaidedAI/EasyOCR)
-
----
-
-## 🚀 Future Scope & Roadmap
-
-### Phase 1: Core Enhancements (Q1 2026)
-
-- [ ] **Multi-Country Support**
-  - Add support for international documents (US SSN, UK Passport, EU ID)
-  - Localization for multiple languages
-  - Country-specific validation rules
-
-- [ ] **Advanced ZK Features**
-  - Range proofs (prove age is between 18-65 without exact DOB)
-  - Selective disclosure (choose which attributes to reveal)
-  - Recursive proofs for complex verifications
-
-- [ ] **Mobile Applications**
-  - React Native mobile app for iOS/Android
-  - QR code scanning for in-person verification
-  - Biometric authentication integration
-
-### Phase 2: Enterprise Features (Q2 2026)
-
-- [ ] **Business Integration**
-  - REST API with API keys for enterprise clients
-  - Webhooks for real-time verification notifications
-  - Bulk verification endpoints
-  - White-label solutions
-
-- [ ] **Compliance & Auditing**
-  - GDPR compliance tools
-  - Audit trail and logging
-  - Regulatory reporting dashboard
-  - Third-party security audits
-
-- [ ] **Advanced OCR**
-  - Support for more document types (voter ID, health cards)
-  - Video KYC (liveness detection)
-  - Document authenticity verification (holograms, watermarks)
-
-### Phase 3: Ecosystem Expansion (Q3 2026)
-
-- [ ] **DeFi Integration**
-  - Age-gated DeFi protocols (18+ only pools)
-  - KYC-compliant DEX listings
-  - Credit scoring based on verified identity
-
-- [ ] **Cross-Chain Support**
-  - Bridge to Ethereum, Polygon, Solana
-  - Multi-chain identity portability
-  - Universal identity standard
-
-- [ ] **DAO Governance**
-  - Community voting on verification criteria
-  - Token-based governance model
-  - Decentralized dispute resolution
-
-### Phase 4: Advanced Features (Q4 2026)
-
-- [ ] **Privacy Enhancements**
-  - Zero-knowledge machine learning models
-  - Homomorphic encryption for data processing
-  - Anonymous credentials (Idemix, U-Prove)
-
-- [ ] **Decentralized Storage**
-  - IPFS integration for encrypted document storage
-  - Filecoin for long-term archival
-  - User-controlled data vaults
-
-- [ ] **AI/ML Integration**
-  - Fraud detection using ML models
-  - Risk scoring and anomaly detection
-  - Automated document classification
-
-### Long-Term Vision (2027+)
-
-- [ ] **Global Identity Network**
-  - Interoperable identity verification across platforms
-  - Universal reputation system
-  - Decentralized identity standard (W3C DID)
-
-- [ ] **Social Impact**
-  - Financial inclusion for unbanked populations
-  - Portable identity for refugees
-  - Digital citizenship solutions
-
-- [ ] **Research & Innovation**
-  - Quantum-resistant cryptography
-  - New ZK-SNARK schemes (PLONK, STARKs)
-  - Academic partnerships and publications
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### How to Contribute
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Areas
-
-- 🔐 Zero-knowledge circuit optimization
-- 🎨 Frontend UI/UX improvements
-- 🐍 OCR accuracy enhancements
-- 📱 Mobile app development
-- 📚 Documentation and tutorials
-- 🧪 Testing and quality assurance
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Stellar Development Foundation** - For Soroban smart contract platform
-- **iden3** - For Circom and snarkjs ZK-SNARK tools
-- **Hermez Network** - For Powers of Tau ceremony files
-- **EasyOCR Community** - For open-source OCR capabilities
-- **Vercel** - For Next.js framework and hosting
-
----
-
-## � Future Scope & Roadmap
-
-### Phase 1: Core Enhancements (Q1 2026)
-
-- [ ] **Multi-Country Support**
-  - Add support for international documents (US SSN, UK Passport, EU ID)
-  - Localization for multiple languages
-  - Country-specific validation rules
-
-- [ ] **Advanced ZK Features**
-  - Range proofs (prove age is between 18-65 without exact DOB)
-  - Selective disclosure (choose which attributes to reveal)
-  - Recursive proofs for complex verifications
-
-- [ ] **Mobile Applications**
-  - React Native mobile app for iOS/Android
-  - QR code scanning for in-person verification
-  - Biometric authentication integration
-
-### Phase 2: Enterprise Features (Q2 2026)
-
-- [ ] **Business Integration**
-  - REST API with API keys for enterprise clients
-  - Webhooks for real-time verification notifications
-  - Bulk verification endpoints
-  - White-label solutions
-
-- [ ] **Compliance & Auditing**
-  - GDPR compliance tools
-  - Audit trail and logging
-  - Regulatory reporting dashboard
-  - Third-party security audits
-
-- [ ] **Advanced OCR**
-  - Support for more document types (voter ID, health cards)
-  - Video KYC (liveness detection)
-  - Document authenticity verification (holograms, watermarks)
-
-### Phase 3: Ecosystem Expansion (Q3 2026)
-
-- [ ] **DeFi Integration**
-  - Age-gated DeFi protocols (18+ only pools)
-  - KYC-compliant DEX listings
-  - Credit scoring based on verified identity
-
-- [ ] **Cross-Chain Support**
-  - Bridge to Ethereum, Polygon, Solana
-  - Multi-chain identity portability
-  - Universal identity standard
-
-- [ ] **DAO Governance**
-  - Community voting on verification criteria
-  - Token-based governance model
-  - Decentralized dispute resolution
-
-### Phase 4: Advanced Features (Q4 2026)
-
-- [ ] **Privacy Enhancements**
-  - Zero-knowledge machine learning models
-  - Homomorphic encryption for data processing
-  - Anonymous credentials (Idemix, U-Prove)
-
-- [ ] **Decentralized Storage**
-  - IPFS integration for encrypted document storage
-  - Filecoin for long-term archival
-  - User-controlled data vaults
-
-- [ ] **AI/ML Integration**
-  - Fraud detection using ML models
-  - Risk scoring and anomaly detection
-  - Automated document classification
-
-### Long-Term Vision (2027+)
-
-- [ ] **Global Identity Network**
-  - Interoperable identity verification across platforms
-  - Universal reputation system
-  - Decentralized identity standard (W3C DID)
-
-- [ ] **Social Impact**
-  - Financial inclusion for unbanked populations
-  - Portable identity for refugees
-  - Digital citizenship solutions
-
-- [ ] **Research & Innovation**
-  - Quantum-resistant cryptography
-  - New ZK-SNARK schemes (PLONK, STARKs)
-  - Academic partnerships and publications
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### How to Contribute
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Areas
-
-- 🔐 Zero-knowledge circuit optimization
-- 🎨 Frontend UI/UX improvements
-- 🐍 OCR accuracy enhancements
-- 📱 Mobile app development
-- 📚 Documentation and tutorials
-- 🧪 Testing and quality assurance
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **Stellar Development Foundation** - For Soroban smart contract platform
-- **iden3** - For Circom and snarkjs ZK-SNARK tools
-- **Hermez Network** - For Powers of Tau ceremony files
-- **EasyOCR Community** - For open-source OCR capabilities
-- **Vercel** - For Next.js framework and hosting
-
----
-
-## �📞 Contact & Support
-
-- **GitHub Issues:** [Report bugs or request features](https://github.com/yourusername/polaris/issues)
-- **Discord:** [Join our community](https://discord.gg/polaris) (Coming Soon)
-- **Twitter:** [@PolarisZK](https://twitter.com/polariszk) (Coming Soon)
-- **Email:** support@polaris.dev (Coming Soon)
-
----
-
-<div align="center">
-
-**Built with ❤️ using ZK-SNARKs on Stellar**
-
-⭐ Star us on GitHub if you find this project useful!
-
-[Documentation](docs/) • [API Reference](docs/API.md) • [Tutorials](docs/tutorials/)
-
-</div>
